@@ -70,9 +70,13 @@ func getPage(ctx context.Context, site string, method string,
 	defer resp.Body.Close()
 
 	var doc *goquery.Document
+
 	if Debug {
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
+		_, err = buf.ReadFrom(resp.Body)
+		if err != nil {
+			return nil, 0, nil, fmt.Errorf("buf.ReadFrom: %w", err)
+		}
 		fmt.Println(buf.String())
 		doc, err = goquery.NewDocumentFromReader(strings.NewReader(buf.String()))
 	} else {

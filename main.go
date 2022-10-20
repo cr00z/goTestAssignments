@@ -1,186 +1,68 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"io"
 	"log"
-	"net/http"
-	"net/http/httputil"
-	"net/url"
-	"strconv"
-	"strings"
-	"time"
+	"os"
+	"os/signal"
+	"sync/atomic"
+	"syscall"
 
-	"github.com/PuerkitoBio/goquery"
+	"github.com/cr00z/parser/work"
+	"golang.org/x/time/rate"
 )
 
 const (
-	Debug        = false
-	startLink    = "http://185.204.3.165"
-	questionLink = startLink + "/question/"
-	queryLimit   = 100
+	workNum   = 10
+	RPS       = 1
+	startLink = "http://185.204.3.165"
 )
 
-func getPage(ctx context.Context, site string, method string,
-	cookies []*http.Cookie, headerValues map[string]string,
-	formValues map[string]string) (*goquery.Document, int, []*http.Cookie, error) {
-
-	httpClient := &http.Client{
-		Transport: http.DefaultTransport,
-		Timeout:   10 * time.Second,
-	}
-
-	body := io.Reader(nil)
-	if len(formValues) > 0 {
-		data := url.Values{}
-		for key, value := range formValues {
-			data.Add(key, value)
-		}
-		body = strings.NewReader(data.Encode())
-	}
-
-	req, err := http.NewRequestWithContext(ctx, method, site, body)
-	if err != nil {
-		return nil, 0, nil, fmt.Errorf("NewRequestWithContext error: %w", err)
-	}
-
-	if len(headerValues) > 0 {
-		for header, value := range headerValues {
-			req.Header.Add(header, value)
-		}
-	}
-
-	if len(cookies) > 0 {
-		for _, value := range cookies {
-			req.AddCookie(value)
-		}
-	}
-
-	if Debug {
-		dump, _ := httputil.DumpRequestOut(req, true)
-		fmt.Println(string(dump))
-	}
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, 0, nil, fmt.Errorf("httpClient.Do: %w", err)
-	}
-	defer resp.Body.Close()
-
-	var doc *goquery.Document
-
-	if Debug {
-		buf := new(bytes.Buffer)
-		_, err = buf.ReadFrom(resp.Body)
-		if err != nil {
-			return nil, 0, nil, fmt.Errorf("buf.ReadFrom: %w", err)
-		}
-		fmt.Println(buf.String())
-		doc, err = goquery.NewDocumentFromReader(strings.NewReader(buf.String()))
-	} else {
-		doc, err = goquery.NewDocumentFromReader(resp.Body)
-	}
-	if err != nil {
-		return nil, 0, nil, fmt.Errorf("NewDocumentFromReader: %w", err)
-	}
-
-	return doc, resp.StatusCode, resp.Cookies(), nil
-}
-
-func parseForm(doc *goquery.Document) map[string]string {
-	formValues := make(map[string]string)
-
-	formSelection := doc.Find("form").First()
-	formSelection.Find("p").Each(func(i int, s *goquery.Selection) {
-		s.Find("input").Each(func(i int, s *goquery.Selection) {
-			name, _ := s.Attr("name")
-			if name == "" {
-				return
-			}
-			// process input type text
-			typ, _ := s.Attr("type")
-			if typ == "text" {
-				formValues[name] = "test"
-			}
-			// process input type radio
-			if typ == "radio" {
-				value, _ := s.Attr("value")
-				if len(value) > len(formValues[name]) {
-					formValues[name] = value
-				}
-			}
-		})
-		s.Find("select").Each(func(i int, s *goquery.Selection) {
-			name, _ := s.Attr("name")
-			if name == "" {
-				return
-			}
-			// process select options
-			s.Find("option").Each(func(i int, s *goquery.Selection) {
-				value, _ := s.Attr("value")
-				if len(value) > len(formValues[name]) {
-					formValues[name] = value
-				}
-			})
-		})
-	})
-	return formValues
-}
-
 func main() {
-	ctx := context.Background()
+	ctx, cancelFn := context.WithCancel(context.Background())
+	termChan := make(chan os.Signal, 1)
+	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// auth
-	_, _, cookies, err := getPage(ctx, startLink, http.MethodGet, nil, nil, nil)
-	if err != nil {
-		log.Fatalf("auth error: %s", err.Error())
+	limiter := rate.NewLimiter(rate.Limit(RPS), 1)
+	workQueue := make(chan *work.Work, workNum)
+	workFinished := int32(0)
+
+	// init
+	for idx := 1; idx <= workNum; idx++ {
+		workQueue <- work.NewWork(idx, ctx, startLink)
 	}
 
-	log.Println("auth completed")
-	if Debug {
-		log.Println(cookies)
-	}
-
-	headers := make(map[string]string)
-	headers["Content-Type"] = "application/x-www-form-urlencoded"
-
-	// first request
-	activeLink := questionLink + "1"
-	doc, code, _, err := getPage(ctx, activeLink, http.MethodGet, cookies, headers, nil)
-	if err != nil {
-		log.Fatalf("get question 1 error: %s", err.Error())
-	}
-	if code != 200 {
-		log.Fatalf("wrong question 1 answer code: %d", code)
-	}
-
-	for i := 2; i < queryLimit; i++ {
-		// parse answer
-		formValues := parseForm(doc)
-		if len(formValues) == 0 {
-			log.Fatal("parse form error")
+	for {
+		select {
+		case work := <-workQueue:
+			log.Printf("Work %d step %d started", work.Idx, work.Step)
+			go func() {
+				err := work.Do()
+				if err != nil {
+					log.Println(err)
+					work.Finished = true
+				}
+				if work.Finished {
+					atomic.AddInt32(&workFinished, 1)
+				} else {
+					workQueue <- work
+				}
+			}()
+		case <-termChan:
+			log.Println("shutdown signal received")
+			cancelFn()
+			return // or break loop if needed
+		default:
 		}
-		log.Printf("question %d answer: %v", i-1, formValues)
 
-		time.Sleep(100 * time.Millisecond) // delay for rate limits
-
-		// next requests
-		doc, code, _, err = getPage(ctx, activeLink, http.MethodPost, cookies, headers, formValues)
+		err := limiter.Wait(ctx)
 		if err != nil {
-			log.Fatalf("get question %d error: %s", i, err.Error())
-		}
-		if code != 200 {
-			log.Fatalf("wrong question %d answer code: %d", i, code)
+			log.Fatal(err)
 		}
 
-		// check success
-		if strings.Contains(doc.Text(), "Test successfully passed") {
-			log.Println("test successfully passed")
+		if workFinished == workNum {
+			log.Println("all works completed")
 			return
 		}
-
-		activeLink = questionLink + strconv.Itoa(i)
 	}
 }

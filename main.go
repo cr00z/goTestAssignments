@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"sync/atomic"
 	"syscall"
 
@@ -14,7 +15,7 @@ import (
 
 const (
 	workNum   = 10
-	RPS       = 1
+	RPS       = 5
 	startLink = "http://185.204.3.165"
 )
 
@@ -32,11 +33,16 @@ func main() {
 		workQueue <- work.NewWork(idx, ctx, startLink)
 	}
 
+	var wg sync.WaitGroup
+
 	for {
 		select {
 		case work := <-workQueue:
 			log.Printf("Work %d step %d started", work.Idx, work.Step)
+
+			wg.Add(1)
 			go func() {
+				defer wg.Done()
 				err := work.Do()
 				if err != nil {
 					log.Println(err)
@@ -48,10 +54,13 @@ func main() {
 					workQueue <- work
 				}
 			}()
+
 		case <-termChan:
 			log.Println("shutdown signal received")
 			cancelFn()
+			wg.Wait()
 			return // or break loop if needed
+
 		default:
 		}
 

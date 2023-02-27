@@ -1,0 +1,21 @@
+syntax = "proto3";
+package plservice;
+option go_package = "gocloudcamp/api/plservice";
+
+import "gocloudcamp/api/song_message.proto";
+
+service PlaylistService {
+  rpc AddSongToPlaylist(CreateSongRequest) returns (CreateSongResponse) {}
+  rpc ReadSongsFromPlaylist(ReadSongRequest) returns (stream ReadSongResponse) {}
+  rpc UpdateSongInPlaylist(UpdateSongRequest) returns (UpdateSongResponse) {}
+  rpc DeleteSongFromPlaylist(DeleteSongRequest) returns (DeleteSongResponse) {}
+
+  rpc Play(PlayRequest) returns (StatusResponse) {}
+  rpc Pause(PauseRequest) returns (StatusResponse) {}
+  rpc Next(NextRequest) returns (StatusResponse) {}
+  rpc Prev(PrevRequest) returns (StatusResponse) {}
+}
+
+message CreateSongRequest {
+  Song song = 1;
+}

@@ -1,21 +1,61 @@
 syntax = "proto3";
 package plservice;
-option go_package = "gocloudcamp/api/plservice";
+option go_package = "./plservice";
 
-import "gocloudcamp/api/song_message.proto";
+import "song_message.proto";
 
 service PlaylistService {
-  rpc AddSongToPlaylist(CreateSongRequest) returns (CreateSongResponse) {}
-  rpc ReadSongsFromPlaylist(ReadSongRequest) returns (stream ReadSongResponse) {}
-  rpc UpdateSongInPlaylist(UpdateSongRequest) returns (UpdateSongResponse) {}
+  rpc CreateSong(CreateSongRequest) returns (CreateSongResponse) {}
+  rpc ReadSong(ReadSongRequest) returns (stream ReadSongResponse) {}
+  rpc UpdateSong(UpdateSongRequest) returns (UpdateSongResponse) {}
   rpc DeleteSongFromPlaylist(DeleteSongRequest) returns (DeleteSongResponse) {}
 
-  rpc Play(PlayRequest) returns (StatusResponse) {}
-  rpc Pause(PauseRequest) returns (StatusResponse) {}
-  rpc Next(NextRequest) returns (StatusResponse) {}
-  rpc Prev(PrevRequest) returns (StatusResponse) {}
+  rpc Control(ControlRequest) returns (ControlResponse) {}
 }
 
 message CreateSongRequest {
   Song song = 1;
+}
+
+message CreateSongResponse {
+  uint64 id = 1;
+}
+
+message ReadSongRequest {
+  repeated uint64 id = 1;
+}
+
+message ReadSongResponse {
+  Song song = 1;
+}
+
+message UpdateSongRequest {
+  Song song = 1;
+}
+
+message UpdateSongResponse {
+  uint64 id = 1;
+}
+
+message DeleteSongRequest {
+  uint64 id = 1;
+}
+
+message DeleteSongResponse {
+  uint64 id = 1;
+}
+
+message ControlRequest {
+  enum Action {
+    PLAY = 0;
+    PAUSE = 1;
+    NEXT = 2;
+    PREV = 3;
+  }
+
+  Action action = 1;
+}
+
+message ControlResponse {
+  string status = 1;
 }

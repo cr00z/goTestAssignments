@@ -2,10 +2,13 @@
 
 [Задание](TASK.md)
 
-## Часть 2
+## Часть 1
 
 ```bash
-2_gocloudcamp git:(main) $ make demo
+2_gocloudcamp git:(main) $ make testcli
+```
+
+```bash
 Player demo
 p play, s stop, n next, b back, a add, q quit
 name: 111

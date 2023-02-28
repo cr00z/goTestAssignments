@@ -1,6 +1,9 @@
 package main
 
 import (
+	"database/sql"
+	_ "github.com/lib/pq"
+	"github.com/pressly/goose"
 	repository "gocloudcamp/internal/repository/postgres"
 	"gocloudcamp/pkg/helpers/postgres"
 	"gocloudcamp/pkg/plserver"
@@ -43,6 +46,18 @@ func main() {
 	repo := repository.NewPostgresRepository(pool)
 
 	// goose
+
+	gooseDB, err := sql.Open("postgres", poolConfig.ConnString())
+	if err != nil {
+		log.Fatal("goose connect to db failed: ", err)
+	}
+
+	err = gooseDB.Ping()
+	if err != nil {
+		log.Fatal("goose connect to db failed: ", err)
+	}
+
+	err = goose.Up(gooseDB, "./migrations")
 
 	// grpc
 

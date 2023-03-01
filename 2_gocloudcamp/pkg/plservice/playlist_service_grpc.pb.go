@@ -25,7 +25,7 @@ type PlaylistServiceClient interface {
 	CreateSong(ctx context.Context, in *CreateSongRequest, opts ...grpc.CallOption) (*CreateSongResponse, error)
 	ReadSong(ctx context.Context, in *ReadSongRequest, opts ...grpc.CallOption) (PlaylistService_ReadSongClient, error)
 	UpdateSong(ctx context.Context, in *UpdateSongRequest, opts ...grpc.CallOption) (*UpdateSongResponse, error)
-	DeleteSongFromPlaylist(ctx context.Context, in *DeleteSongRequest, opts ...grpc.CallOption) (*DeleteSongResponse, error)
+	DeleteSong(ctx context.Context, in *DeleteSongRequest, opts ...grpc.CallOption) (*DeleteSongResponse, error)
 	Control(ctx context.Context, in *ControlRequest, opts ...grpc.CallOption) (*ControlResponse, error)
 }
 
@@ -87,9 +87,9 @@ func (c *playlistServiceClient) UpdateSong(ctx context.Context, in *UpdateSongRe
 	return out, nil
 }
 
-func (c *playlistServiceClient) DeleteSongFromPlaylist(ctx context.Context, in *DeleteSongRequest, opts ...grpc.CallOption) (*DeleteSongResponse, error) {
+func (c *playlistServiceClient) DeleteSong(ctx context.Context, in *DeleteSongRequest, opts ...grpc.CallOption) (*DeleteSongResponse, error) {
 	out := new(DeleteSongResponse)
-	err := c.cc.Invoke(ctx, "/plservice.PlaylistService/DeleteSongFromPlaylist", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/plservice.PlaylistService/DeleteSong", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ type PlaylistServiceServer interface {
 	CreateSong(context.Context, *CreateSongRequest) (*CreateSongResponse, error)
 	ReadSong(*ReadSongRequest, PlaylistService_ReadSongServer) error
 	UpdateSong(context.Context, *UpdateSongRequest) (*UpdateSongResponse, error)
-	DeleteSongFromPlaylist(context.Context, *DeleteSongRequest) (*DeleteSongResponse, error)
+	DeleteSong(context.Context, *DeleteSongRequest) (*DeleteSongResponse, error)
 	Control(context.Context, *ControlRequest) (*ControlResponse, error)
 	mustEmbedUnimplementedPlaylistServiceServer()
 }
@@ -130,8 +130,8 @@ func (UnimplementedPlaylistServiceServer) ReadSong(*ReadSongRequest, PlaylistSer
 func (UnimplementedPlaylistServiceServer) UpdateSong(context.Context, *UpdateSongRequest) (*UpdateSongResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSong not implemented")
 }
-func (UnimplementedPlaylistServiceServer) DeleteSongFromPlaylist(context.Context, *DeleteSongRequest) (*DeleteSongResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteSongFromPlaylist not implemented")
+func (UnimplementedPlaylistServiceServer) DeleteSong(context.Context, *DeleteSongRequest) (*DeleteSongResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSong not implemented")
 }
 func (UnimplementedPlaylistServiceServer) Control(context.Context, *ControlRequest) (*ControlResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Control not implemented")
@@ -206,20 +206,20 @@ func _PlaylistService_UpdateSong_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PlaylistService_DeleteSongFromPlaylist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PlaylistService_DeleteSong_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteSongRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PlaylistServiceServer).DeleteSongFromPlaylist(ctx, in)
+		return srv.(PlaylistServiceServer).DeleteSong(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/plservice.PlaylistService/DeleteSongFromPlaylist",
+		FullMethod: "/plservice.PlaylistService/DeleteSong",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PlaylistServiceServer).DeleteSongFromPlaylist(ctx, req.(*DeleteSongRequest))
+		return srv.(PlaylistServiceServer).DeleteSong(ctx, req.(*DeleteSongRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -258,8 +258,8 @@ var PlaylistService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PlaylistService_UpdateSong_Handler,
 		},
 		{
-			MethodName: "DeleteSongFromPlaylist",
-			Handler:    _PlaylistService_DeleteSongFromPlaylist_Handler,
+			MethodName: "DeleteSong",
+			Handler:    _PlaylistService_DeleteSong_Handler,
 		},
 		{
 			MethodName: "Control",

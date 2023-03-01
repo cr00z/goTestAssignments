@@ -1,4 +1,4 @@
-package plserver
+package server
 
 import (
 	"context"

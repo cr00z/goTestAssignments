@@ -1,4 +1,4 @@
-package plclient
+package client
 
 import (
 	"context"
@@ -28,7 +28,7 @@ func (c *PlaylistClient) CreateSong(song *plservice.Song) {
 	req := &plservice.CreateSongRequest{
 		Song: song,
 	}
-	
+
 	resp, err := c.service.CreateSong(ctx, req)
 	if err != nil {
 		log.Fatal("cannot create song request: ", err)
@@ -48,7 +48,7 @@ func (c *PlaylistClient) UpdateSong(ctx context.Context, in *plservice.UpdateSon
 	panic("implement me")
 }
 
-func (c *PlaylistClient) DeleteSongFromPlaylist(ctx context.Context, in *plservice.DeleteSongRequest, opts ...grpc.CallOption) (*plservice.DeleteSongResponse, error) {
+func (c *PlaylistClient) DeleteSong(ctx context.Context, in *plservice.DeleteSongRequest, opts ...grpc.CallOption) (*plservice.DeleteSongResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -57,4 +57,3 @@ func (c *PlaylistClient) Control(ctx context.Context, in *plservice.ControlReque
 	//TODO implement me
 	panic("implement me")
 }
-

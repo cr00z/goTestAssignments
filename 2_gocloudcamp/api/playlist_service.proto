@@ -8,7 +8,7 @@ service PlaylistService {
   rpc CreateSong(CreateSongRequest) returns (CreateSongResponse) {}
   rpc ReadSong(ReadSongRequest) returns (stream ReadSongResponse) {}
   rpc UpdateSong(UpdateSongRequest) returns (UpdateSongResponse) {}
-  rpc DeleteSongFromPlaylist(DeleteSongRequest) returns (DeleteSongResponse) {}
+  rpc DeleteSong(DeleteSongRequest) returns (DeleteSongResponse) {}
 
   rpc Control(ControlRequest) returns (ControlResponse) {}
 }

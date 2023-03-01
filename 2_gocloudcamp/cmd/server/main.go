@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose"
+	"gocloudcamp/internal/handlers/plservice/server"
 	repository "gocloudcamp/internal/repository/postgres"
 	"gocloudcamp/pkg/helpers/postgres"
-	"gocloudcamp/pkg/plserver"
 	"gocloudcamp/pkg/plservice"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -62,7 +62,7 @@ func main() {
 	// grpc
 
 	grpcServer := grpc.NewServer()
-	playlistService := plserver.NewPlaylistServer(repo)
+	playlistService := server.NewPlaylistServer(repo)
 	plservice.RegisterPlaylistServiceServer(grpcServer, playlistService)
 
 	reflection.Register(grpcServer)

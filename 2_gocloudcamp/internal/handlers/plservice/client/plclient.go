@@ -76,14 +76,41 @@ func (c *PlaylistClient) ReadSong(ids []uint64) ([]*song.Song, error) {
 	return songs, nil
 }
 
-func (c *PlaylistClient) UpdateSong(ctx context.Context, in *plservice.UpdateSongRequest, opts ...grpc.CallOption) (*plservice.UpdateSongResponse, error) {
+func (c *PlaylistClient) UpdateSong(song *song.Song) (uint64, error) {
 	//TODO implement me
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	req := &plservice.UpdateSongRequest{
+		Song: &plservice.Song{
+			Id:       song.Id,
+			Name:     song.Name,
+			Duration: uint64(song.Duration),
+		},
+	}
+
+	resp, err := c.service.UpdateSong(ctx, req)
+	if err != nil {
+		return 0, errors.Errorf("cannot execute update song request: %v", err)
+	}
+
+	return resp.GetId(), nil
 }
 
-func (c *PlaylistClient) DeleteSong(ctx context.Context, in *plservice.DeleteSongRequest, opts ...grpc.CallOption) (*plservice.DeleteSongResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (c *PlaylistClient) DeleteSong(id uint64) (uint64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	req := &plservice.DeleteSongRequest{
+		Id: id,
+	}
+
+	resp, err := c.service.DeleteSong(ctx, req)
+	if err != nil {
+		return 0, errors.Errorf("cannot execute delete song request: %v", err)
+	}
+
+	return resp.GetId(), nil
 }
 
 func (c *PlaylistClient) Control(ctx context.Context, in *plservice.ControlRequest, opts ...grpc.CallOption) (*plservice.ControlResponse, error) {

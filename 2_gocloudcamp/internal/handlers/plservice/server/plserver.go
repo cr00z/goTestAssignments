@@ -25,7 +25,6 @@ func NewPlaylistServer(repo repository.Repository) *PlaylistServer {
 func (s *PlaylistServer) CreateSong(
 	ctx context.Context, request *plservice.CreateSongRequest,
 ) (*plservice.CreateSongResponse, error) {
-
 	if err := contextError(ctx); err != nil {
 		return nil, err
 	}
@@ -82,22 +81,54 @@ func (s *PlaylistServer) ReadSong(
 func (s *PlaylistServer) UpdateSong(
 	ctx context.Context, request *plservice.UpdateSongRequest,
 ) (*plservice.UpdateSongResponse, error) {
+	if err := contextError(ctx); err != nil {
+		return nil, err
+	}
 
-	//TODO implement me
+	id := request.GetSong().GetId()
+	if id == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "unknown id")
+	}
+
+	name := request.GetSong().GetName()
+	duration := request.GetSong().GetDuration()
+	if name == "" && duration == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "data not changed")
+	}
+
+	log.Print("received update song request with id: ", id)
+
+	deletedId, err := s.repo.UpdateSong(&song.Song{
+		Id:       id,
+		Name:     name,
+		Duration: time.Duration(duration),
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot update song from the repo: %v", err)
+	}
 
 	return &plservice.UpdateSongResponse{
-		Id: 777, // TODO
+		Id: deletedId,
 	}, nil
 }
 
-func (s *PlaylistServer) DeleteSongFromPlaylist(
+func (s *PlaylistServer) DeleteSong(
 	ctx context.Context, request *plservice.DeleteSongRequest,
 ) (*plservice.DeleteSongResponse, error) {
+	if err := contextError(ctx); err != nil {
+		return nil, err
+	}
 
-	//TODO implement me
+	id := request.GetId()
+	log.Print("received delete song request with id: ", id)
+
+	err := s.repo.DeleteSong(id)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot delete song from the repo: %v", err)
+	}
 
 	return &plservice.DeleteSongResponse{
-		Id: 777, // TODO
+		Id: id,
 	}, nil
 }
 

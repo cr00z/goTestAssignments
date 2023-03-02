@@ -4,11 +4,15 @@ testcli:
 server:
 	@go run cmd/server/main.go
 
+client:
+	@go run cmd/client/main.go
+
 up:
-	cd deploy/postgres && \
-	docker compose up -d && \
-	sleep 10 && \
-	docker-compose exec postgres psql -U user -c 'CREATE DATABASE playlist'
+	@echo 'waiting for containers to start'
+	@cd deploy/postgres && docker compose up -d
+	@sleep 10
+	@echo 'create database playlist'
+	@cd deploy/postgres && docker-compose exec postgres psql -U user -c 'CREATE DATABASE playlist'
 
 down:
 	cd deploy/postgres && docker compose down

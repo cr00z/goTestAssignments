@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"gocloudcamp/internal/domain/playlist"
 	"gocloudcamp/internal/domain/song"
 	"gocloudcamp/internal/repository"
 	"gocloudcamp/pkg/plservice"
@@ -12,13 +13,15 @@ import (
 )
 
 type PlaylistServer struct {
-	repo repository.Repository
+	repo     repository.Repository
+	playlist *playlist.Playlist
 	plservice.UnimplementedPlaylistServiceServer
 }
 
-func NewPlaylistServer(repo repository.Repository) *PlaylistServer {
+func NewPlaylistServer(repo repository.Repository, pl *playlist.Playlist) *PlaylistServer {
 	return &PlaylistServer{
-		repo: repo,
+		repo:     repo,
+		playlist: pl,
 	}
 }
 
@@ -135,10 +138,31 @@ func (s *PlaylistServer) DeleteSong(
 func (s *PlaylistServer) Control(
 	ctx context.Context, request *plservice.ControlRequest,
 ) (*plservice.ControlResponse, error) {
+	result := "OK"
+	var err error
+	var song *song.Song
 
-	//TODO implement me
+	ctrl := request.GetAction()
+	switch ctrl {
+	case plservice.ControlRequest_PLAY:
+		err = s.playlist.Play()
+	case plservice.ControlRequest_PAUSE:
+		err = s.playlist.Pause()
+	case plservice.ControlRequest_NEXT:
+		err = s.playlist.Next()
+		song, _ = s.playlist.CurrentSong()
+		result = "song: " + song.Name
+	case plservice.ControlRequest_PREV:
+		err = s.playlist.Prev()
+		song, _ = s.playlist.CurrentSong()
+		result = "song: " + song.Name
+	}
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "control error: %v", err)
+	}
 
 	return &plservice.ControlResponse{
-		Status: "OK", // TODO
+		Status: result,
 	}, nil
 }

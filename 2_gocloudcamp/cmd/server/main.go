@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose"
+	"gocloudcamp/internal/domain/playlist"
+	"gocloudcamp/internal/domain/song"
 	"gocloudcamp/internal/handlers/plservice/server"
+	"gocloudcamp/internal/player"
 	repository "gocloudcamp/internal/repository/postgres"
 	"gocloudcamp/pkg/helpers/postgres"
 	"gocloudcamp/pkg/plservice"
@@ -59,10 +63,24 @@ func main() {
 
 	err = goose.Up(gooseDB, "./migrations")
 
+	// playlist
+
+	pl := playlist.NewPlaylist()
+	err = repo.ReadSong(context.Background(), []uint64{}, func(song *song.Song) error {
+		pl.AddSong(song)
+		return nil
+	})
+	if err != nil {
+		log.Fatal("playlist start failed: ", err)
+	}
+	go player.Start(pl)
+
+	log.Print("playlist started")
+
 	// grpc
 
 	grpcServer := grpc.NewServer()
-	playlistService := server.NewPlaylistServer(repo)
+	playlistService := server.NewPlaylistServer(repo, pl)
 	plservice.RegisterPlaylistServiceServer(grpcServer, playlistService)
 
 	reflection.Register(grpcServer)

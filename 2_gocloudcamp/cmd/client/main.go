@@ -5,6 +5,7 @@ import (
 	"github.com/eiannone/keyboard"
 	"gocloudcamp/cmd/client/testfunc"
 	"gocloudcamp/internal/handlers/plservice/client"
+	"gocloudcamp/pkg/plservice"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
@@ -45,8 +46,18 @@ func main() {
 		case 'd':
 			testfunc.TestDeleteSong(playlistClient)
 		case 'p', 's', 'n', 'b':
-			// TODO: implement me
-			fmt.Print("not implemented")
+			var ctrl plservice.ControlRequest_Action
+			switch ch {
+			case 'p':
+				ctrl = plservice.ControlRequest_PLAY
+			case 's':
+				ctrl = plservice.ControlRequest_PAUSE
+			case 'n':
+				ctrl = plservice.ControlRequest_NEXT
+			case 'b':
+				ctrl = plservice.ControlRequest_PREV
+			}
+			testfunc.TestControl(playlistClient, ctrl)
 		}
 	}
 }

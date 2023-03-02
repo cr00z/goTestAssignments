@@ -113,7 +113,19 @@ func (c *PlaylistClient) DeleteSong(id uint64) (uint64, error) {
 	return resp.GetId(), nil
 }
 
-func (c *PlaylistClient) Control(ctx context.Context, in *plservice.ControlRequest, opts ...grpc.CallOption) (*plservice.ControlResponse, error) {
+func (c *PlaylistClient) Control(ctrl plservice.ControlRequest_Action) (string, error) {
 	//TODO implement me
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	req := &plservice.ControlRequest{
+		Action: ctrl,
+	}
+
+	resp, err := c.service.Control(ctx, req)
+	if err != nil {
+		return "", errors.Errorf("cannot execute control request: %v", err)
+	}
+
+	return resp.GetStatus(), nil
 }

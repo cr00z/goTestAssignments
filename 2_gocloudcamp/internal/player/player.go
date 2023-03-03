@@ -20,7 +20,6 @@ type Player interface {
 	Next() error
 	Prev() error
 
-	// additional functionality for service
 	ModifySong(song *song.Song) error
 	RemoveSong(id uint64) error
 }

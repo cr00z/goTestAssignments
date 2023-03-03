@@ -136,18 +136,44 @@ func (pl *Playlist) checkSongChange(id uint64) error {
 	return nil
 }
 
-func (pl *Playlist) ModifySong(song *song.Song) error {
-	err := pl.checkSongChange(song.Id)
+func (pl *Playlist) modifySongFn(modSong *song.Song, fn func(e *list.Element)) error {
+	err := pl.checkSongChange(modSong.Id)
 	if err != nil {
 		return err
 	}
-	return nil
+
+	pl.Lock()
+	defer pl.Unlock()
+
+	for e := pl.items.Front(); e != nil; e = e.Next() {
+		currSong, ok := e.Value.(*song.Song)
+		if !ok {
+			return ErrorSongCastError
+		}
+
+		if currSong.Id == modSong.Id {
+			fn(e)
+			return nil
+		}
+	}
+
+	return ErrorSongNotFound
+}
+
+func (pl *Playlist) ModifySong(modSong *song.Song) error {
+	return pl.modifySongFn(modSong, func(e *list.Element) {
+		currSong, _ := e.Value.(*song.Song)
+		if modSong.Name != "" {
+			currSong.Name = modSong.Name
+		}
+		if modSong.Duration != 0 {
+			currSong.Duration = modSong.Duration
+		}
+	})
 }
 
 func (pl *Playlist) RemoveSong(id uint64) error {
-	err := pl.checkSongChange(id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return pl.modifySongFn(&song.Song{Id: id}, func(e *list.Element) {
+		pl.items.Remove(e)
+	})
 }

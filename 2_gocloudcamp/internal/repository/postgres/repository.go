@@ -48,6 +48,7 @@ func (r PostgresRepository) ReadSong(
 		}
 		query += " WHERE id IN (" + strings.Join(idsStr, ",") + ")"
 	}
+	query += " ORDER BY id ASC"
 
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
@@ -98,14 +99,14 @@ func (r PostgresRepository) UpdateSong(song *song.Song) (uint64, error) {
 func (r PostgresRepository) DeleteSong(id uint64) error {
 	const query = "DELETE FROM " + TableName + " WHERE id = $1"
 
-	ct, err := r.pool.Exec(context.Background(), query, id)
+	_, err := r.pool.Exec(context.Background(), query, id)
 	if err != nil {
 		return errors.Errorf("unable to delete: %v", err)
 	}
 
-	if ct.RowsAffected() == 0 {
-		return repository.ErrorEmptyResult
-	}
+	//if ct.RowsAffected() != 1 {
+	//	return repository.ErrorEmptyResult
+	//}
 
 	return nil
 }

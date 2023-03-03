@@ -105,17 +105,24 @@ func (s *PlaylistServer) UpdateSong(
 
 	log.Print("received update song request with id: ", id)
 
-	deletedId, err := s.repo.UpdateSong(&song.Song{
+	updSong := &song.Song{
 		Id:       id,
 		Name:     name,
 		Duration: time.Duration(duration),
-	})
+	}
+
+	err := s.playlist.ModifySong(updSong)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot update song from the playlist: %v", err)
+	}
+
+	updatedId, err := s.repo.UpdateSong(updSong)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "cannot update song from the repo: %v", err)
 	}
 
 	return &plservice.UpdateSongResponse{
-		Id: deletedId,
+		Id: updatedId,
 	}, nil
 }
 
@@ -129,7 +136,12 @@ func (s *PlaylistServer) DeleteSong(
 	id := request.GetId()
 	log.Print("received delete song request with id: ", id)
 
-	err := s.repo.DeleteSong(id)
+	err := s.playlist.RemoveSong(id)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot delete song from the playlist: %v", err)
+	}
+
+	err = s.repo.DeleteSong(id)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "cannot delete song from the repo: %v", err)
 	}

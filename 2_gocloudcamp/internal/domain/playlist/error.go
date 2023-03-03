@@ -8,4 +8,5 @@ var (
 	ErrorPlaylistIsAlreadyPaused  = errors.New("playlist is already paused")
 	ErrorPlaylistIsEmpty          = errors.New("playlist is empty")
 	ErrorSongСantBeChanged        = errors.New("song is playing and cannot be changed")
+	ErrorSongNotFound             = errors.New("song not found")
 )

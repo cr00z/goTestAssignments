@@ -68,7 +68,7 @@ func main() {
 		case 'a':
 			played := pl.Played()
 			if played {
-				pl.Pause()
+				_ = pl.Pause()
 				time.Sleep(player.SongTick)
 			}
 
@@ -86,7 +86,7 @@ func main() {
 			)
 
 			if played {
-				pl.Play()
+				_ = pl.Play()
 			}
 		}
 	}

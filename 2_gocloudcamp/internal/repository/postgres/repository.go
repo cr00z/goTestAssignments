@@ -60,7 +60,10 @@ func (r PostgresRepository) ReadSong(
 
 	for rows.Next() {
 		song := song.Song{}
-		rows.Scan(&song.Id, &song.Name, &song.Duration)
+		err = rows.Scan(&song.Id, &song.Name, &song.Duration)
+		if err != nil {
+			return err
+		}
 		err = f(&song)
 		if err != nil {
 			return err

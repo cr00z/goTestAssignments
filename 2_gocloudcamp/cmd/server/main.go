@@ -37,12 +37,12 @@ func main() {
 
 	poolConfig, err := postgres.NewPoolConfig(pgConfig)
 	if err != nil {
-		log.Fatal("pool config error: ", err)
+		log.Fatalf("pool config error: %v", err)
 	}
 
 	pool, err := postgres.NewPool(poolConfig)
 	if err != nil {
-		log.Fatal("connect to db failed: ", err)
+		log.Fatalf("connect to db failed: %v", err)
 	}
 
 	log.Print("db connected")
@@ -53,15 +53,18 @@ func main() {
 
 	gooseDB, err := sql.Open("postgres", poolConfig.ConnString())
 	if err != nil {
-		log.Fatal("goose connect to db failed: ", err)
+		log.Fatalf("goose connect to db failed: %v", err)
 	}
 
 	err = gooseDB.Ping()
 	if err != nil {
-		log.Fatal("goose connect to db failed: ", err)
+		log.Fatalf("goose connect to db failed: %v", err)
 	}
 
 	err = goose.Up(gooseDB, "./migrations")
+	if err != nil {
+		log.Fatalf("goose migration up failed: %v", err)
+	}
 
 	// playlist
 

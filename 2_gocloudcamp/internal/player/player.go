@@ -31,7 +31,7 @@ func Start(pl Player) {
 			currentSongPos := pl.CurrentSongPos()
 			if currentSongPos+SongTick > duration {
 				time.Sleep(duration - currentSongPos)
-				pl.Next()
+				_ = pl.Next()
 			} else {
 				time.Sleep(SongTick)
 				pl.SetCurrentSongPos(currentSongPos + SongTick)

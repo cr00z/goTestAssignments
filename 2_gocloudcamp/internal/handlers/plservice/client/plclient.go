@@ -72,8 +72,7 @@ func (c *PlaylistClient) ReadSong(ids []uint64) ([]*song.Song, error) {
 			Duration: time.Duration(resSong.GetDuration()),
 		})
 	}
-
-	return songs, nil
+	//return songs, nil
 }
 
 func (c *PlaylistClient) UpdateSong(song *song.Song) (uint64, error) {

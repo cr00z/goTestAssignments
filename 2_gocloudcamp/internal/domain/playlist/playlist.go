@@ -127,3 +127,27 @@ func (pl *Playlist) First() error {
 	pl.currentSong = pl.items.Front()
 	return nil
 }
+
+func (pl *Playlist) checkSongChange(id uint64) error {
+	currentSong, err := pl.CurrentSong()
+	if err == nil && pl.Played() && currentSong.Id == id {
+		return ErrorSongСantBeChanged
+	}
+	return nil
+}
+
+func (pl *Playlist) ModifySong(song *song.Song) error {
+	err := pl.checkSongChange(song.Id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (pl *Playlist) RemoveSong(id uint64) error {
+	err := pl.checkSongChange(id)
+	if err != nil {
+		return err
+	}
+	return nil
+}

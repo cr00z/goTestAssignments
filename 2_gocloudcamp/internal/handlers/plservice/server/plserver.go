@@ -35,13 +35,17 @@ func (s *PlaylistServer) CreateSong(
 	reqSong := request.GetSong()
 	log.Print("received create song request with id: ", reqSong.GetId())
 
-	id, err := s.repo.CreateSong(&song.Song{
+	song := &song.Song{
 		Name:     reqSong.Name,
 		Duration: time.Duration(reqSong.Duration),
-	})
+	}
+	id, err := s.repo.CreateSong(song)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "cannot save song to the repo: %v", err)
 	}
+
+	song.Id = id
+	s.playlist.AddSong(song)
 
 	return &plservice.CreateSongResponse{
 		Id: id,
